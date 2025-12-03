@@ -5,9 +5,9 @@ import { RiLock2Fill } from "react-icons/ri";
 import { FaPencilAlt } from "react-icons/fa";
 import { FaPhoneFlip } from "react-icons/fa6";
 import { Link, Navigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
+import { axiosInstance } from "../../api/axios"; // Updated import
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -21,32 +21,37 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "http://localhost:4000/api/v1/user/register",
-        { name, phone, email, role, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      // Use centralized axiosInstance
+      const { data } = await axiosInstance.post("/register", {
+        name,
+        phone,
+        email,
+        role,
+        password,
+      });
+
       toast.success(data.message);
+
+      // Fetch user after registration
+      const userRes = await axiosInstance.get("/getuser");
+      setUser(userRes.data.user);
+      setIsAuthorized(true);
+
+      // Clear form fields
       setName("");
       setEmail("");
       setPassword("");
       setPhone("");
       setRole("");
-      setIsAuthorized(true);
+
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
-  if(isAuthorized){
-    return <Navigate to={'/'}/>
+  if (isAuthorized) {
+    return <Navigate to={"/"} />;
   }
-
 
   return (
     <>

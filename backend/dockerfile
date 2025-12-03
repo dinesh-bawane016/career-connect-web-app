@@ -1,0 +1,25 @@
+# Stage 1: install deps
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production --silent
+
+# Stage 2: build (if you have build step — optional)
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# If you have TypeScript or build steps uncomment:
+# RUN npm run build
+
+# Stage 3: runtime
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+# Create a non-root user (security)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app ./
+USER appuser
+EXPOSE 5000
+CMD ["node", "server.js"]

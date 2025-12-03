@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: my-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      # Required for Auth (make sure these match your code!)
+      JWT_SECRET_KEY: fgjfgsudgfudnhfousidfnewuikfmlewf
+      JWT_EXPIRE: "7d"
+      COOKIE_EXPIRE: "5"
+      
+      # Database connection
+      DB_URL: "mongodb+srv://dineshUser:dinesh%40123@cluster0.r3kgsel.mongodb.net/careerconnect?retryWrites=true&w=majority&appName=Cluster0"
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: my-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: "http://localhost:5000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

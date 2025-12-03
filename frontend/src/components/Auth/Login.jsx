@@ -3,42 +3,42 @@ import { MdOutlineMailOutline } from "react-icons/md";
 import { RiLock2Fill } from "react-icons/ri";
 import { Link, Navigate } from "react-router-dom";
 import { FaRegUser } from "react-icons/fa";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
+import { axiosInstance } from "../../api/axios"; // Updated import
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
-  const { isAuthorized, setIsAuthorized } = useContext(Context);
+  const { isAuthorized, setIsAuthorized, setUser } = useContext(Context);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "http://localhost:4000/api/v1/user/login",
-        { email, password, role },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      // Use centralized axiosInstance
+      const { data } = await axiosInstance.post("/login", { email, password, role });
       toast.success(data.message);
+
+      // Fetch current user after login
+      const userRes = await axiosInstance.get("/getuser");
+      setUser(userRes.data.user);
+      setIsAuthorized(true);
+
+      // Clear form fields
       setEmail("");
       setPassword("");
       setRole("");
-      setIsAuthorized(true);
+
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Login failed");
+      setIsAuthorized(false);
     }
   };
 
-  if(isAuthorized){
-    return <Navigate to={'/'}/>
+  if (isAuthorized) {
+    return <Navigate to={"/"} />;
   }
 
   return (
@@ -55,7 +55,6 @@ const Login = () => {
               <div>
                 <select value={role} onChange={(e) => setRole(e.target.value)}>
                   <option value="">Select Role</option>
-                  
                   <option value="Job Seeker">Job Seeker</option>
                   <option value="Employer">Employer</option>
                 </select>
