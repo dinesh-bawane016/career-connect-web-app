@@ -12,10 +12,29 @@ import fileUpload from "express-fileupload";
 const app = express();
 config({ path: "./config/config.env" });
 
-// ---------- CORS Setup ----------
+// ---------- SMART CORS Setup ----------
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000", // fallback if env not set
+    origin: (origin, callback) => {
+      // 1. Allow requests with no origin (like mobile apps, curl, or Postman)
+      if (!origin) return callback(null, true);
+
+      // 2. Define allowed origins (Localhost + Your Main Production URL)
+      const allowedOrigins = [
+        process.env.FRONTEND_URL, // The main URL from Render settings
+        "http://localhost:3000",  // Local React
+        "http://localhost:5173"   // Local Vite
+      ];
+
+      // 3. Check if the origin is in the allowed list OR if it is a Vercel preview
+      // This line `origin.endsWith(".vercel.app")` allows ALL Vercel deployments automatically
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      } else {
+        console.log("Blocked by CORS:", origin); // Debugging log
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // allow cookies/auth headers
   })
@@ -44,10 +63,5 @@ dbConnection();
 
 // ---------- Error Handling ----------
 app.use(errorMiddleware);
-
-// ---------- Start Server (for local development, if needed) ----------
-// Only use this if this file is entry point. In Docker, you might have server.js.
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app;
