@@ -1,0 +1,73 @@
+# -------------------------------
+# Backend Deployment
+# -------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: career-connect-backend-deployment
+  namespace: "<NAMESPACE>"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: career-connect-backend
+  template:
+    metadata:
+      labels:
+        app: career-connect-backend
+    spec:
+      imagePullSecrets:
+        - name: nexus-secret
+      containers:
+        - name: career-connect-backend
+          image: 127.0.0.1:30085/<PROJECT_NAMESPACE>/career-connect-backend:<TAG>
+          ports:
+            - containerPort: 5000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            # Database credentials from secrets/configmap as per standard
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_NAME
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_PORT
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
