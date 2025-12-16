@@ -22,12 +22,12 @@ const Application = () => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setFileError("");
-    
+
     if (!file) {
       setResume(null);
       return;
     }
-    
+
     // Check file type
     const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
@@ -35,31 +35,31 @@ const Application = () => {
       setResume(null);
       return;
     }
-    
+
     // Check file size (limit to 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setFileError("File size should be less than 2MB");
       setResume(null);
       return;
     }
-    
+
     setResume(file);
   };
 
   const handleApplication = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!name || !email || !phone || !address || !coverLetter) {
       toast.error("Please fill in all fields");
       return;
     }
-    
+
     if (!resume) {
       setFileError("Please upload your resume");
       return;
     }
-    
+
     setLoading(true);
     const formData = new FormData();
     formData.append("name", name);
@@ -72,7 +72,7 @@ const Application = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:5000/api/v1/application/post",
+        "/api/v1/application/post",
         formData,
         {
           withCredentials: true,
@@ -90,10 +90,10 @@ const Application = () => {
       toast.success(data.message);
       navigateTo("/job/getall");
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 
+      const errorMessage = error.response?.data?.message ||
         "Something went wrong. Please try again later.";
       toast.error(errorMessage);
-      
+
       // Show specific message for Cloudinary errors
       if (errorMessage.includes("Cloudinary") || errorMessage.includes("api_key")) {
         toast.error("File upload service is currently unavailable. Please try again later.");
@@ -150,7 +150,7 @@ const Application = () => {
             <label
               style={{ textAlign: "start", display: "block", fontSize: "20px" }}
             >
-              Upload Resume 
+              Upload Resume
               <p style={{ color: "red", fontSize: "12px", margin: "5px 0 0 0" }}>
                 (Supported formats: PNG, JPEG, WEBP. Max size: 2MB)
               </p>
@@ -167,12 +167,12 @@ const Application = () => {
               </p>
             )}
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            style={{ 
+            style={{
               opacity: loading ? 0.7 : 1,
-              cursor: loading ? "not-allowed" : "pointer" 
+              cursor: loading ? "not-allowed" : "pointer"
             }}
           >
             {loading ? "Submitting..." : "Send Application"}

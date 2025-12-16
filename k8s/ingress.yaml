@@ -3,14 +3,19 @@ kind: Ingress
 metadata:
   name: app-ingress
   namespace: "2401009"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
   - host: 2401009.imcc.com
     http:
       paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: server
+            port:
+              number: 5000
       - path: /
         pathType: Prefix
         backend:

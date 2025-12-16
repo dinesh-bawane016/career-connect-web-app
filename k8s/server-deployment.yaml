@@ -46,7 +46,7 @@ spec:
           value: "5000"
         - name: BASE_URL
           value: "http://server.2401009.svc.cluster.local:5000"
-        - name: MONGO_URI
+        - name: DB_URL
           valueFrom:
             secretKeyRef:
               name: server-secret
@@ -56,3 +56,5 @@ spec:
             secretKeyRef:
               name: server-secret
               key: JWT_SECRET
+        - name: FRONTEND_URL
+          value: "http://2401009.imcc.com"

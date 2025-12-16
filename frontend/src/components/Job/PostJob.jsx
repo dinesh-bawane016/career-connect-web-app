@@ -31,27 +31,27 @@ const PostJob = () => {
     }
     await axios
       .post(
-        "http://localhost:5000/api/v1/job/post",
+        "/api/v1/job/post",
         fixedSalary.length >= 4
           ? {
-              title,
-              description,
-              category,
-              country,
-              city,
-              location,
-              fixedSalary,
-            }
+            title,
+            description,
+            category,
+            country,
+            city,
+            location,
+            fixedSalary,
+          }
           : {
-              title,
-              description,
-              category,
-              country,
-              city,
-              location,
-              salaryFrom,
-              salaryTo,
-            },
+            title,
+            description,
+            category,
+            country,
+            city,
+            location,
+            salaryFrom,
+            salaryTo,
+          },
         {
           withCredentials: true,
           headers: {
@@ -98,7 +98,7 @@ const PostJob = () => {
                   Frontend Web Development
                 </option>
                 <option value="Business Development Executive">
-                Business Development Executive
+                  Business Development Executive
                 </option>
                 <option value="Account & Finance">Account & Finance</option>
                 <option value="Artificial Intelligence">
