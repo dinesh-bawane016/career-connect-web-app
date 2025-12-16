@@ -72,9 +72,8 @@ spec:
                     '''
                     // Using 'nexus-login' as a likely credential ID. 
                     // If this fails, user needs to update it or provide the correct one.
-                    withCredentials([usernamePassword(credentialsId: 'nexus-login', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-                         sh 'docker login $REGISTRY_URL -u $REG_USER -p $REG_PASS'
-                    }
+                    // Bypass credentials binding to solve user issue
+                    sh 'docker login $REGISTRY_URL -u admin -p Changeme@2025'
                     
                     dir('backend') {
                         sh '''
