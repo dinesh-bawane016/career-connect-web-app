@@ -52,8 +52,8 @@ spec:
     environment {
         APP_NAME_BACKEND = "server"
         APP_NAME_FRONTEND = "client"
-        // Registry URL from friend's file
-        REGISTRY_URL    = "127.0.0.1:30085" 
+        // Registry URL (Internal Service DNS)
+        REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085" 
         // Namespace inferred from user logs
         REGISTRY_REPO   = "2401009"
         
