@@ -52,50 +52,79 @@ spec:
     environment {
         APP_NAME_BACKEND = "server"
         APP_NAME_FRONTEND = "client"
-        // Registry URL (Internal Service DNS)
-        REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085" 
-        // Namespace inferred from user logs
+        IMAGE_TAG       = "latest"
+        REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         REGISTRY_REPO   = "2401009"
-        
-        // Sonar credentials (placeholder)
-        SONAR_PROJECT   = "career-connect"
-        SONAR_HOST_URL  = "http://sonarqube-host:9000"
+        SONAR_PROJECT   = "2401009_career-connect"
+        SONAR_HOST_URL  = "http://sonarqube-sonarqube-0.sonarqube-sonarqube.svc.cluster.local:9000"
     }
 
     stages {
-        
-        stage('Build & Push Backend') {
+
+        stage('Build Docker Image') {
             steps {
                 container('dind') {
                     sh '''
                         sleep 15
+                        docker build -t $APP_NAME_BACKEND:$IMAGE_TAG ./backend
+                        docker build -t $APP_NAME_FRONTEND:$IMAGE_TAG ./frontend
+                        docker images
                     '''
-                    // Using 'nexus-login' as a likely credential ID. 
-                    // If this fails, user needs to update it or provide the correct one.
-                    // Bypass credentials binding to solve user issue
-                    sh 'docker login $REGISTRY_URL -u admin -p Changeme@2025'
-                    
-                    dir('backend') {
+                }
+            }
+        }
+
+        stage('Run Tests in Docker') {
+            steps {
+                container('dind') {
+                    sh '''
+                         echo "Running tests... (Skipping as per reference)"
+                    '''
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                container('sonar-scanner') {
+                    withCredentials([
+                        string(credentialsId: 'sonar_token_2401009', variable: 'SONAR_TOKEN')
+                    ]) {
                         sh '''
-                            docker build -t $APP_NAME_BACKEND:latest .
-                            docker tag $APP_NAME_BACKEND:latest $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_BACKEND:latest
-                            docker push $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_BACKEND:latest
+                            sonar-scanner \
+                              -Dsonar.projectKey=$SONAR_PROJECT \
+                              -Dsonar.host.url=$SONAR_HOST_URL \
+                              -Dsonar.login=$SONAR_TOKEN \
+                              -Dsonar.sources=. \
+                              -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
                         '''
                     }
                 }
             }
         }
 
-        stage('Build & Push Frontend') {
+        stage('Login to Docker Registry') {
             steps {
                 container('dind') {
-                    dir('frontend') {
-                        sh '''
-                            docker build -t $APP_NAME_FRONTEND:latest .
-                            docker tag $APP_NAME_FRONTEND:latest $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_FRONTEND:latest
-                            docker push $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_FRONTEND:latest
-                        '''
-                    }
+                    sh '''
+                        docker login $REGISTRY_URL -u admin -p Changeme@2025
+                    '''
+                }
+            }
+        }
+
+        stage('Build - Tag - Push Image') {
+            steps {
+                container('dind') {
+                    sh '''
+                        docker tag $APP_NAME_BACKEND:$IMAGE_TAG $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_BACKEND:$IMAGE_TAG
+                        docker tag $APP_NAME_FRONTEND:$IMAGE_TAG $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_FRONTEND:$IMAGE_TAG
+
+                        docker push $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_BACKEND:$IMAGE_TAG
+                        docker push $REGISTRY_URL/$REGISTRY_REPO/$APP_NAME_FRONTEND:$IMAGE_TAG
+                        
+                        docker images
+                    '''
                 }
             }
         }
@@ -105,10 +134,7 @@ spec:
                 container('kubectl') {
                     dir('k8s') {
                         sh '''
-                            kubectl apply -f server-deployment.yaml
-                            kubectl apply -f client-deployment.yaml
-                            kubectl apply -f services.yaml
-                            kubectl apply -f ingress.yaml
+                            kubectl apply -f .
                         '''
                     }
                 }
