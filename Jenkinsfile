@@ -91,6 +91,12 @@ spec:
                         string(credentialsId: 'sonar_token_2401009', variable: 'SONAR_TOKEN')
                     ]) {
                         sh '''
+                            echo "Debugging SonarQube Connection..."
+                            printenv
+                            echo "Checking connectivity to $SONAR_HOST_URL"
+                            curl -v $SONAR_HOST_URL || echo "Curl failed"
+                            nslookup sonarqube-sonarqube-0.sonarqube-sonarqube.svc.cluster.local || echo "nslookup failed"
+
                             sonar-scanner \
                               -Dsonar.projectKey=$SONAR_PROJECT \
                               -Dsonar.host.url=$SONAR_HOST_URL \
