@@ -52,23 +52,31 @@ spec:
     environment {
         APP_NAME_BACKEND = "server"
         APP_NAME_FRONTEND = "client"
-        IMAGE_TAG       = "latest"
-        REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
-        REGISTRY_REPO   = "2401009"
-        SONAR_PROJECT   = "2401009_career-connect"
-        SONAR_HOST_URL  = "http://sonarqube-sonarqube-0.sonarqube-sonarqube.svc.cluster.local:9000"
+        IMAGE_TAG = "latest"
+        REGISTRY_URL = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
+        REGISTRY_REPO = "2401009"
+        SONAR_PROJECT = "2401009_career-connect"
+        // Corrected SonarQube URL based on 'kubectl get svc' output
+        SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
     }
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    checkout scm
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 container('dind') {
                     sh '''
-                        sleep 15
-                        docker build -t $APP_NAME_BACKEND:$IMAGE_TAG ./backend
-                        docker build -t $APP_NAME_FRONTEND:$IMAGE_TAG ./frontend
-                        docker images
+                         sleep 15
+                         docker build -t ${APP_NAME_BACKEND}:${IMAGE_TAG} ./backend 
+                         docker build -t ${APP_NAME_FRONTEND}:${IMAGE_TAG} ./frontend
+                         docker images
                     '''
                 }
             }
@@ -79,19 +87,6 @@ spec:
                 container('dind') {
                     sh '''
                          echo "Running tests... (Skipping as per reference)"
-                    '''
-                }
-            }
-        }
-
-        stage('Debug K8s Services') {
-            steps {
-                container('kubectl') {
-                    sh '''
-                        echo "Listing all services in all namespaces:"
-                        kubectl get svc --all-namespaces
-                        echo "Listing all pods in all namespaces:"
-                        kubectl get pods --all-namespaces -o wide
                     '''
                 }
             }
@@ -108,7 +103,6 @@ spec:
                             printenv
                             echo "Checking connectivity to $SONAR_HOST_URL"
                             curl -v $SONAR_HOST_URL || echo "Curl failed"
-                            nslookup sonarqube-sonarqube-0.sonarqube-sonarqube.svc.cluster.local || echo "nslookup failed"
 
                             sonar-scanner \
                               -Dsonar.projectKey=$SONAR_PROJECT \
