@@ -53,6 +53,11 @@ app.use(
   })
 );
 
+// ---------- Health Check Endpoint ----------
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy" });
+});
+
 // ---------- Routes ----------
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/job", jobRouter);
