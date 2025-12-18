@@ -55,7 +55,7 @@ spec:
         IMAGE_TAG = "latest"
         REGISTRY_URL = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         REGISTRY_REPO = "2401009"
-        SONAR_PROJECT = "2401009_career-connect"
+        SONAR_PROJECT = "career_connect"
         // Corrected SonarQube URL based on 'kubectl get svc' output
         SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
     }
