@@ -84,6 +84,19 @@ spec:
             }
         }
 
+        stage('Debug K8s Services') {
+            steps {
+                container('kubectl') {
+                    sh '''
+                        echo "Listing all services in all namespaces:"
+                        kubectl get svc --all-namespaces
+                        echo "Listing all pods in all namespaces:"
+                        kubectl get pods --all-namespaces -o wide
+                    '''
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
