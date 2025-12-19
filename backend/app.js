@@ -16,22 +16,31 @@ config({ path: "./config/config.env" });
 app.use(
   cors({
     origin: (origin, callback) => {
+      console.log("Request origin:", origin); // Debug log
+
       // 1. Allow requests with no origin (like mobile apps, curl, or Postman)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log("No origin - allowing request");
+        return callback(null, true);
+      }
 
       // 2. Define allowed origins (Localhost + Your Main Production URL)
       const allowedOrigins = [
-        process.env.FRONTEND_URL, // The main URL from Render settings
+        process.env.FRONTEND_URL, // The main URL from environment
         "http://localhost:3000",  // Local React
-        "http://localhost:5173"   // Local Vite
-      ];
+        "http://localhost:5173",  // Local Vite
+        "http://2401009.imcc.com", // Production domain
+        "https://2401009.imcc.com" // Production domain (HTTPS)
+      ].filter(Boolean); // Remove undefined values
+
+      console.log("Allowed origins:", allowedOrigins);
 
       // 3. Check if the origin is in the allowed list OR if it is a Vercel preview
-      // This line `origin.endsWith(".vercel.app")` allows ALL Vercel deployments automatically
-      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.endsWith(".imcc.com")) {
+        console.log("Origin allowed:", origin);
         return callback(null, true);
       } else {
-        console.log("Blocked by CORS:", origin); // Debugging log
+        console.log("Blocked by CORS:", origin);
         return callback(new Error("Not allowed by CORS"));
       }
     },
