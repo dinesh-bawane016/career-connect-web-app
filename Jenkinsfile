@@ -232,8 +232,8 @@ spec:
                         
                         echo ""
                         echo "=== ENDPOINTS ==="
-                        kubectl get endpoints server
-                        kubectl get endpoints client
+                        kubectl get endpoints server -n jenkins
+                        kubectl get endpoints client -n jenkins
                         
                         echo ""
                         echo "=== WAITING FOR PODS TO BE READY (60 seconds) ==="

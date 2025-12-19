@@ -22,6 +22,11 @@ spec:
         image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401009/client:latest
         ports:
         - containerPort: 80
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
         resources:
           requests:
             cpu: "100m"
