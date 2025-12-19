@@ -55,5 +55,20 @@ spec:
             secretKeyRef:
               name: server-secret
               key: JWT_SECRET
+        - name: CLOUDINARY_CLOUD_NAME
+          valueFrom:
+            secretKeyRef:
+              name: server-secret
+              key: CLOUDINARY_CLOUD_NAME
+        - name: CLOUDINARY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: server-secret
+              key: CLOUDINARY_API_KEY
+        - name: CLOUDINARY_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: server-secret
+              key: CLOUDINARY_API_SECRET
         - name: FRONTEND_URL
           value: "http://2401009.imcc.com"

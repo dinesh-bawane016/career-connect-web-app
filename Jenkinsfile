@@ -56,8 +56,14 @@ spec:
         REGISTRY_URL = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         REGISTRY_REPO = "2401009"
         SONAR_PROJECT = "career_connect"
-        // Corrected SonarQube URL based on 'kubectl get svc' output
         SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
+        
+        // Database and secrets
+        MONGO_URI = "mongodb+srv://dineshUser:dinesh%40123@cluster0.r3kgsel.mongodb.net/careerconnect?retryWrites=true&w=majority&appName=Cluster0"
+        JWT_SECRET = "fgjfgsudgfudnhfousidfnewuikfmlewf"
+        CLOUDINARY_CLOUD_NAME = "dtgsdprcl"
+        CLOUDINARY_API_KEY = "819224586478434"
+        CLOUDINARY_API_SECRET = "yr_TbbT_JDG2Xfu4KcrrcykeJvA"
     }
 
     stages {
@@ -65,6 +71,39 @@ spec:
             steps {
                 script {
                     checkout scm
+                }
+            }
+        }
+
+        stage('Create/Update Secrets') {
+            steps {
+                container('kubectl') {
+                    sh '''
+                        echo "=== Creating/Updating Kubernetes Secrets ==="
+                        
+                        # Delete old secrets if they exist (to ensure they're updated)
+                        kubectl delete secret server-secret --ignore-not-found=true
+                        kubectl delete secret nexus-secret --ignore-not-found=true
+                        
+                        # Create server-secret with all required environment variables
+                        echo "Creating server-secret..."
+                        kubectl create secret generic server-secret \
+                          --from-literal=MONGO_URI="${MONGO_URI}" \
+                          --from-literal=JWT_SECRET="${JWT_SECRET}" \
+                          --from-literal=CLOUDINARY_CLOUD_NAME="${CLOUDINARY_CLOUD_NAME}" \
+                          --from-literal=CLOUDINARY_API_KEY="${CLOUDINARY_API_KEY}" \
+                          --from-literal=CLOUDINARY_API_SECRET="${CLOUDINARY_API_SECRET}"
+                        
+                        # Create nexus-secret for pulling images
+                        echo "Creating nexus-secret..."
+                        kubectl create secret docker-registry nexus-secret \
+                          --docker-server=${REGISTRY_URL} \
+                          --docker-username=admin \
+                          --docker-password=Changeme@2025
+                        
+                        echo "=== Secrets created successfully ==="
+                        kubectl get secrets
+                    '''
                 }
             }
         }
@@ -151,6 +190,76 @@ spec:
                         '''
                     }
                 }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                container('kubectl') {
+                    sh '''
+                        echo "============================================"
+                        echo "=== DEPLOYMENT VERIFICATION ==="
+                        echo "============================================"
+                        
+                        echo ""
+                        echo "=== PODS STATUS ==="
+                        kubectl get pods -o wide
+                        
+                        echo ""
+                        echo "=== SERVICES ==="
+                        kubectl get svc
+                        
+                        echo ""
+                        echo "=== INGRESS ==="
+                        kubectl get ingress
+                        kubectl describe ingress app-ingress
+                        
+                        echo ""
+                        echo "=== SERVER POD DETAILS ==="
+                        kubectl describe pod -l app=server | tail -50
+                        
+                        echo ""
+                        echo "=== CLIENT POD DETAILS ==="
+                        kubectl describe pod -l app=client | tail -50
+                        
+                        echo ""
+                        echo "=== SERVER POD LOGS (Last 30 lines) ==="
+                        kubectl logs -l app=server --tail=30 || echo "Server pod logs not available yet"
+                        
+                        echo ""
+                        echo "=== CLIENT POD LOGS (Last 30 lines) ==="
+                        kubectl logs -l app=client --tail=30 || echo "Client pod logs not available yet"
+                        
+                        echo ""
+                        echo "=== ENDPOINTS ==="
+                        kubectl get endpoints server
+                        kubectl get endpoints client
+                        
+                        echo ""
+                        echo "=== WAITING FOR PODS TO BE READY (60 seconds) ==="
+                        kubectl wait --for=condition=ready pod -l app=server --timeout=60s || echo "Server pod not ready within timeout"
+                        kubectl wait --for=condition=ready pod -l app=client --timeout=60s || echo "Client pod not ready within timeout"
+                        
+                        echo ""
+                        echo "=== FINAL POD STATUS ==="
+                        kubectl get pods
+                        
+                        echo "============================================"
+                        echo "=== VERIFICATION COMPLETE ==="
+                        echo "============================================"
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            container('kubectl') {
+                sh '''
+                    echo "=== Post-Deployment Summary ==="
+                    kubectl get all
+                '''
             }
         }
     }
