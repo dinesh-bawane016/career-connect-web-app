@@ -94,12 +94,14 @@ spec:
                           --from-literal=CLOUDINARY_API_KEY="${CLOUDINARY_API_KEY}" \
                           --from-literal=CLOUDINARY_API_SECRET="${CLOUDINARY_API_SECRET}"
                         
-                        # Create nexus-secret for pulling images
-                        echo "Creating nexus-secret..."
-                        kubectl create secret docker-registry nexus-secret \
-                          --docker-server=${REGISTRY_URL} \
+                        # Create nexus-pull-secret for pulling images (using Localhost Port)
+                        echo "Creating nexus-pull-secret..."
+                        kubectl create secret docker-registry nexus-pull-secret \
+                          --docker-server=127.0.0.1:30085 \
                           --docker-username=admin \
-                          --docker-password=Changeme@2025
+                          --docker-password=Changeme@2025 \
+                          --namespace=jenkins \
+                          --dry-run=client -o yaml | kubectl apply -f -
                         
                         echo "=== Secrets created successfully ==="
                         kubectl get secrets
@@ -187,6 +189,15 @@ spec:
                     dir('k8s') {
                         sh '''
                             kubectl apply -f .
+                            
+                            # Restart deployments to ensure new images are pulled
+                            kubectl rollout restart deployment/server -n jenkins
+                            kubectl rollout restart deployment/client -n jenkins
+                            
+                            # Wait for rollout to complete
+                            echo "Waiting for rollout..."
+                            kubectl rollout status deployment/server -n jenkins
+                            kubectl rollout status deployment/client -n jenkins
                         '''
                     }
                 }
