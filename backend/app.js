@@ -40,6 +40,8 @@ app.use(
         allowedOrigins.includes(origin) ||
         origin.endsWith(".vercel.app") ||
         origin.endsWith(".imcc.com") ||
+        origin.endsWith(".ngrok-free.app") || // Allow ngrok
+        origin.endsWith(".ngrok.io") ||       // Allow ngrok
         origin.includes("localhost") // Allow any localhost port
       ) {
         console.log("Origin allowed:", origin);
