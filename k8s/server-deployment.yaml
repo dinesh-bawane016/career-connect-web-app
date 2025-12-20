@@ -78,3 +78,5 @@ spec:
               key: CLOUDINARY_API_SECRET
         - name: FRONTEND_URL
           value: "http://2401009.imcc.com"
+        - name: SECURE_COOKIE
+          value: "false"
