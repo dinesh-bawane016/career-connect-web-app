@@ -35,8 +35,13 @@ app.use(
 
       console.log("Allowed origins:", allowedOrigins);
 
-      // 3. Check if the origin is in the allowed list OR if it is a Vercel preview
-      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.endsWith(".imcc.com")) {
+      // 3. Check if the origin is in the allowed list OR if it is a Vercel preview OR localhost
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.endsWith(".imcc.com") ||
+        origin.includes("localhost") // Allow any localhost port
+      ) {
         console.log("Origin allowed:", origin);
         return callback(null, true);
       } else {
