@@ -89,7 +89,7 @@ spec:
                         echo "Creating server-secret..."
                         kubectl create secret generic server-secret \
                           --from-literal=MONGO_URI="${MONGO_URI}" \
-                          --from-literal=JWT_SECRET="${JWT_SECRET}" \
+                          --from-literal=JWT_SECRET_KEY="${JWT_SECRET}" \
                           --from-literal=CLOUDINARY_CLOUD_NAME="${CLOUDINARY_CLOUD_NAME}" \
                           --from-literal=CLOUDINARY_API_KEY="${CLOUDINARY_API_KEY}" \
                           --from-literal=CLOUDINARY_API_SECRET="${CLOUDINARY_API_SECRET}"
